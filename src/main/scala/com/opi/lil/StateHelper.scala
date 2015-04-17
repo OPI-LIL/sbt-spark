@@ -16,12 +16,22 @@
 
 package com.opi.lil.sbtspark
 
-class Jar(projectName: String, projetVesrion: String, scalaVersion: String)	{
+import sbt._
+import Keys._
 
-	val shortScalaVersion = scalaVersion.substring(0, scalaVersion.lastIndexOf("."))		
-		
-	def fileFolder = s"target/scala-${shortScalaVersion}"
-	def fileName = s"${projectName}_${shortScalaVersion}-${projetVesrion}.jar"	
-  def filePath = s"${fileFolder}/${fileName}"
+object StateHelper {  
+
+  def ifEmpty[T](args: Seq[T], f: => T) : T = {
+    if(args.size==0) f else args(0)
+  }
+
+  def getSettingValue[T](setting: SettingKey[T], state: State): T = {
   
+    val extracted: Extracted = Project.extract(state)
+    val structure = extracted.structure
+    val currentRef = extracted.currentRef
+
+    (setting in currentRef get structure.data).get    
+  }
+
 }

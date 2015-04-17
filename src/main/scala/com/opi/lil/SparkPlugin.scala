@@ -19,40 +19,74 @@ package com.opi.lil.sbtspark
 import sbt._
 import Keys._
 import Def.Initialize
+import complete.DefaultParsers._
 
-object SublimePlugin extends AutoPlugin {
+object SparkPlugin extends AutoPlugin {
 
   object autoImport {
+    
     // defining task
-    val deploy = taskKey[Unit]("Deploy to remote machine")
-    // val submit = inputKey[Unit]("Submit given class from jar to Apache Spark") 
+    val deploy = taskKey[Unit]("Deploy to remote machine")    
 
-    // define settings key  
-    val remote = settingKey[String]("Address to Apache Spark Master")
-    val remoteFolder = settingKey[String]("Deploy destination folder")
-    val defaultClass = settingKey[String]("Default class to be submitted to Apache Spark")
-
+    // define settings keys  
+    val user = settingKey[String]("User of the Apache Spark Master")
+    val host = settingKey[String]("Host of the Apache Spark Master")    
+    val port = settingKey[Int]("SSH port")    
+    val key = settingKey[String]("Path to prive hey for passwordless login")
+    val destFolder = settingKey[String]("Deploy destination folder")
+    val defaultClass = settingKey[String]("Default class to be submitted to Apache Spark")  
   }
-
-  import autoImport._  
-
-  override lazy val projectSettings = Seq(commands += helloCommand)
   
-  lazy val helloCommand =
-    Command.command("hello") { (state: State) =>
-      println("Hi!")
-      state
-    }
+  import autoImport._  
+  import StateHelper._
+  import SSH._
+  
+  override def trigger = allRequirements 
+  override lazy val projectSettings = Seq(
+    defaultClass := "MainApp",
+    port := 22, 
+    deploy := deployImpl.value,
+    commands ++= Seq(submit)
+  )
+        
+  lazy val submit = Command.args("submit", "<className>") { (state, args) =>
+    doCommand(state, ifEmpty(args, getSettingValue(defaultClass, state)))    
+  }
 
   lazy val deployImpl: Initialize[Task[Unit]] =
     Def.task {      
       (Keys.`package` in Compile).value   // depends on package task
-      val jar = new JarData(name.value, version.value, scalaVersion.value)          
-      val remoteName = remote.value
-      val dstFolder = remoteFolder.value
-      val srcFolder = jar.fileFolder()
-      val fileName = jar.fileName()
       
-      println("$remoteName $dstFolder $srcFolder $fileName")  
-   }
+      val log = streams.value.log            
+      val jar = new Jar(name.value, version.value, scalaVersion.value)                                    
+
+      SSH.uploadFile(host.value, port.value, user.value, key.value, destFolder.value, jar.filePath, log)
+  }
+
+  
+  def doCommand(state: State, className: String) : State = {
+      val log = state.log
+      val extracted = Project.extract(state)
+      val (afterDeploy, result) = extracted.runTask(deploy in Compile, state)
+      
+      val hostVal = getSettingValue(host, state)
+      val portVal = getSettingValue(port, state)
+      val userVal = getSettingValue(user, state)
+      val keyVal = getSettingValue(key, state)
+      val destFolderVal = getSettingValue(destFolder, state)
+      val className = getSettingValue(defaultClass, state)
+      
+      val jar = new Jar(
+        getSettingValue(name, state),
+        getSettingValue(version, state),
+        getSettingValue(scalaVersion, state))    
+
+      val command = s"spark-submit --class $className $destFolderVal/${jar.fileName}"
+
+      log.info(command)
+
+      SSH.submitCommand(hostVal, portVal, userVal, keyVal, command, log)
+      
+      afterDeploy                
+  }
 }
