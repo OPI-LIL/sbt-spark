@@ -2,7 +2,7 @@ import bintray.Keys._
 
 
 lazy val commonSettings = Seq(
-  version in ThisBuild := "0.1",
+  version in ThisBuild := "0.1.0",
   organization in ThisBuild := "com.opi.lil",
   scalaVersion in ThisBuild := "2.10.4",
   sbtPlugin in ThisBuild := true
@@ -20,4 +20,4 @@ lazy val root = (project in file(".")).
     bintrayOrganization in bintray := None
   )
 
-(vcsUrl in bintray) := Some("git@github.com:1o0ko/sbt-spark.git")
+  (vcsUrl in bintray) := Some("git@github.com:1o0ko/sbt-spark.git")
