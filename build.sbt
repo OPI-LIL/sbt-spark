@@ -2,7 +2,7 @@ import bintray.Keys._
 
 
 lazy val commonSettings = Seq(
-  version in ThisBuild := "0.1.0",
+  version in ThisBuild := "0.1",
   organization in ThisBuild := "com.opi.lil",
   scalaVersion in ThisBuild := "2.10.4",
   sbtPlugin in ThisBuild := true
@@ -15,7 +15,7 @@ lazy val root = (project in file(".")).
     name := "sbt-spark",
     description := "Plugin for easy jar deployment and submission to remote linux machine running apache spark",
     licenses += ("Apache-2.0", url("https://www.apache.org/licenses/LICENSE-2.0.html")),
-    publishMavenStyle := false,
+    publishMavenStyle := true,
     repository in bintray := "sbt-plugins",
     bintrayOrganization in bintray := None
   )
