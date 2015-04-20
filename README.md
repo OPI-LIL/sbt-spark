@@ -1,6 +1,6 @@
 # sbt-spark
 
-Plugin for easy jar deployment and submission to remote linux machine running apache spark
+SBT plugin for easy jar deployment and submission to remote linux machine running apache spark
 
 ## Install
 
