@@ -8,7 +8,7 @@ SBT plugin for easy jar deployment and submission to remote linux machine runnin
 
 - a linux machine with key-based authorization
 
-Add the following to your sbt `project/plugins.sbt` file:
+Add the following to your sbt `project/sbt-spark.sbt` file:
 
 ```scala
 resolvers += Resolver.url(
